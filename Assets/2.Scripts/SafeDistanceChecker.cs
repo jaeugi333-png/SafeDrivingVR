@@ -1,0 +1,73 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class SafeDistanceChecker : MonoBehaviour
+{
+    [Header("앞차")]
+    public Transform Front_car;
+
+    [Header("거리 기준")]
+    public float danger_distance = 8f;
+
+    [Header("위험 지속 시간")]
+    public float close_time = 0f;
+
+    private bool is_close = false;
+    private bool is_checked = false;
+
+    void Update()
+    {
+        CheckDistance();
+    }
+
+    void CheckDistance()
+    {
+        if (Front_car == null || ScoreManager.instance == null)
+        {
+            return;
+        }
+
+        float distance = Vector3.Distance(transform.position, Front_car.position);
+
+        if (distance <= danger_distance && is_checked == false)
+        {
+            is_close = true;
+            close_time += Time.deltaTime;
+        }
+        else
+        {
+            if (is_close == true && is_checked == false)
+            {
+                ApplyPenalty();
+            }
+
+            is_close = false;
+            close_time = 0f;
+        }
+
+        if (close_time >= 3f && is_checked == false)
+        {
+            ApplyPenalty();
+        }
+    }
+
+    void ApplyPenalty()
+    {
+        if (close_time >= 3f)
+        {
+            ScoreManager.instance.MinusScore(15, "안전거리 미확보: 앞차와 3초 이상 가까운 거리를 유지했습니다.");
+            is_checked = true;
+        }
+        else if (close_time >= 2f)
+        {
+            ScoreManager.instance.MinusScore(10, "안전거리 미확보: 앞차와 2초 이상 3초 미만 가까운 거리를 유지했습니다.");
+            is_checked = true;
+        }
+        else if (close_time >= 1f)
+        {
+            ScoreManager.instance.MinusScore(5, "안전거리 미확보: 앞차와 1초 이상 2초 미만 가까운 거리를 유지했습니다.");
+            is_checked = true;
+        }
+    }
+}
