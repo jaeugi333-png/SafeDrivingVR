@@ -1,17 +1,20 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class CarController : MonoBehaviour
 {
     [Header("차량 설정")]
-    public float accel_power = 15f;
-    public float brake_power = 20f;
+    public float accel_power = 25f;
+    public float brake_power = 35f;
     public float turn_power = 100f;
-    public float max_speed = 50f;
+    public float max_speed = 70f;
+
+    [Header("입력값")]
+    public float accel_input;
+    public float brake_input;
+    public float steer_input;
 
     [Header("현재 속도")]
-    public float current_speed;
+    public float current_speed = 0f;
 
     private Rigidbody rb;
 
@@ -24,42 +27,26 @@ public class CarController : MonoBehaviour
     {
         Move();
         Turn();
-
-        current_speed = rb.velocity.magnitude * 3.6f;
     }
 
     void Move()
     {
-        // 가속
-        if (Input.GetKey(KeyCode.W))
+        current_speed += accel_input * accel_power * Time.fixedDeltaTime;
+        current_speed -= brake_input * brake_power * Time.fixedDeltaTime;
+
+        if (accel_input <= 0f && brake_input <= 0f)
         {
-            if (current_speed < max_speed)
-            {
-                rb.AddForce(transform.forward * accel_power, ForceMode.Acceleration);
-            }
+            current_speed -= 8f * Time.fixedDeltaTime;
         }
 
-        // 브레이크
-        if (Input.GetKey(KeyCode.S))
-        {
-            rb.AddForce(-transform.forward * brake_power, ForceMode.Acceleration);
-        }
+        current_speed = Mathf.Clamp(current_speed, 0f, max_speed);
+
+        float speed_ms = current_speed / 3.6f;
+        rb.velocity = transform.forward * speed_ms;
     }
 
     void Turn()
     {
-        float horizontal = 0f;
-
-        if (Input.GetKey(KeyCode.A))
-        {
-            horizontal = -1f;
-        }
-
-        if (Input.GetKey(KeyCode.D))
-        {
-            horizontal = 1f;
-        }
-
-        transform.Rotate(Vector3.up * horizontal * turn_power * Time.fixedDeltaTime);
+        transform.Rotate(Vector3.up * steer_input * turn_power * Time.fixedDeltaTime);
     }
 }
