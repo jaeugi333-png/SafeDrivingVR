@@ -57,6 +57,8 @@ public class VRCarControl : MonoBehaviour
                 "Right Valid : " + right_device.isValid + "\n" +
                 "Accel : " + accel.ToString("F2") + "\n" +
                 "Brake : " + brake.ToString("F2") + "\n" +
+                "Weather : " + WeatherManager.instance.current_weather + "\n" +
+                "RainEffect : " + WeatherManager.instance.rain_effect.activeSelf + "\n" +
                 "Light(X) : " + device_controller.light_on + "\n" +
                 "Wiper(Y) : " + device_controller.wiper_on + "\n" +
                 "Hazard(A) : " + device_controller.hazard_on + "\n" +
