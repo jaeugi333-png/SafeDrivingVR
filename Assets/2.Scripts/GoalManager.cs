@@ -4,6 +4,7 @@ public class GoalManager : MonoBehaviour
 {
     [Header("종료 UI")]
     public GameObject finish_image;
+    public ResultUIManager resultUIManager;
 
     [Header("멈출 대상")]
     public CarController car_controller;
@@ -22,6 +23,11 @@ public class GoalManager : MonoBehaviour
             return;
 
         is_finish = true;
+
+        if (resultUIManager != null)
+        {
+            resultUIManager.ShowResult();
+        }
 
         if (finish_image != null)
             finish_image.SetActive(true);
