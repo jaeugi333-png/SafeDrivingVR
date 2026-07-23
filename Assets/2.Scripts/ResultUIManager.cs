@@ -12,11 +12,24 @@ public class ResultUIManager : MonoBehaviour
     [Header("신호 준수 결과")]
     public TMP_Text trafficViolationResultText;
 
+    [Header("와이퍼 사용 결과")]
+    public TMP_Text wiperUsageResultText;
+
+    [Header("양손 운전 결과")]
+    public TMP_Text twoHandDrivingResultText;
+
     public void ShowResult()
     {
+        safeDistanceResultText.gameObject.SetActive(true);
+        forwardAttentionResultText.gameObject.SetActive(true);
+        trafficViolationResultText.gameObject.SetActive(true);
+        wiperUsageResultText.gameObject.SetActive(true);
+        twoHandDrivingResultText.gameObject.SetActive(true);
         ShowSafeDistanceResult();
         ShowForwardAttentionResult();
         ShowTrafficViolationResult();
+        ShowWiperUsageResult();
+        ShowTwoHandDrivingResult();
     }
 
     private void ShowSafeDistanceResult()
@@ -82,5 +95,47 @@ public class ResultUIManager : MonoBehaviour
             $"정상 통과: {manager.green_pass_count}회\n" +
             $"황색 신호 통과: {manager.yellow_pass_count}회\n" +
             $"적색 신호 위반: {manager.red_violation_count}회";
+    }
+
+    private void ShowWiperUsageResult()
+    {
+        WiperUsageRecordManager manager =
+            WiperUsageRecordManager.Instance;
+
+        if (manager == null ||
+            wiperUsageResultText == null)
+        {
+            return;
+        }
+
+        wiperUsageResultText.text =
+            $"[와이퍼 사용 평가]\n" +
+            $"최종 판정: {manager.GetFinalResult()}\n" +
+            $"비 구간 주행: {manager.total_rain_time:F1}초\n" +
+            $"와이퍼 미사용: {manager.total_wiper_off_time:F1}초\n" +
+            $"최장 미사용: {manager.longest_wiper_off_time:F1}초\n" +
+            $"미사용 위반: {manager.violation_count}회";
+    }
+
+    private void ShowTwoHandDrivingResult()
+    {
+        TwoHandDrivingRecordManager manager =
+            TwoHandDrivingRecordManager.Instance;
+
+        if (manager == null ||
+            twoHandDrivingResultText == null)
+        {
+            return;
+        }
+
+        twoHandDrivingResultText.gameObject.SetActive(true);
+
+        twoHandDrivingResultText.text =
+            "[양손 운전 평가]\n" +
+            "위반 횟수: "
+            + manager.violation_count
+            + "회\n" +
+            "최종 판정: "
+            + manager.GetFinalResult();
     }
 }

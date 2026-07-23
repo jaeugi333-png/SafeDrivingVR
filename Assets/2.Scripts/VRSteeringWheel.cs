@@ -23,6 +23,10 @@ public class VRSteeringWheel : MonoBehaviour
     private bool left_grip;
     private bool right_grip;
 
+    public bool LeftGrip => left_grip;
+    public bool RightGrip => right_grip;
+    public bool IsBothHandsGripping => left_grip && right_grip;
+
     void Start()
     {
         left_device = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
