@@ -10,6 +10,10 @@ public class VRCarControl : MonoBehaviour
     [Header("차량 장치")]
     public CarDeviceControl device_controller;
 
+    [Header("방향지시등 입력 설정")]
+    public float signal_input_threshold = 0.7f;
+    public float signal_reset_threshold = 0.3f;
+
     [Header("디버그 텍스트")]
     public TMP_Text debug_text;
 
@@ -21,22 +25,29 @@ public class VRCarControl : MonoBehaviour
     private bool prev_a;
     private bool prev_b;
 
+    private bool signal_input_ready = true;
+
     void Start()
     {
-        left_device = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
-        right_device = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+        left_device =
+            InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
+
+        right_device =
+            InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
     }
 
     void Update()
     {
         if (!left_device.isValid)
         {
-            left_device = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
+            left_device =
+                InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
         }
 
         if (!right_device.isValid)
         {
-            right_device = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+            right_device =
+                InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
         }
 
         float accel = GetRightLever();
@@ -49,20 +60,14 @@ public class VRCarControl : MonoBehaviour
         }
 
         CheckButtons();
+        CheckTurnSignalInput();
 
-        if (debug_text != null && device_controller != null)
+        if (debug_text != null &&
+            device_controller != null)
         {
-            debug_text.text =
-                "Left Valid : " + left_device.isValid + "\n" +
-                "Right Valid : " + right_device.isValid + "\n" +
-                "Accel : " + accel.ToString("F2") + "\n" +
-                "Brake : " + brake.ToString("F2") + "\n" +
-                "Weather : " + WeatherManager.instance.current_weather + "\n" +
-                "RainEffect : " + WeatherManager.instance.rain_effect.activeSelf + "\n" +
-                "Light(X) : " + device_controller.light_on + "\n" +
-                "Wiper(Y) : " + device_controller.wiper_on + "\n" +
-                "Hazard(A) : " + device_controller.hazard_on + "\n" +
-                "Menu(B) : " + device_controller.menu_on;
+            Vector2 left_axis = GetLeftAxis();
+
+            debug_text.text = "Hello";
         }
     }
 
@@ -78,10 +83,25 @@ public class VRCarControl : MonoBehaviour
         bool a;
         bool b;
 
-        left_device.TryGetFeatureValue(CommonUsages.primaryButton, out x);      // X
-        left_device.TryGetFeatureValue(CommonUsages.secondaryButton, out y);    // Y
-        right_device.TryGetFeatureValue(CommonUsages.primaryButton, out a);     // A
-        right_device.TryGetFeatureValue(CommonUsages.secondaryButton, out b);   // B
+        left_device.TryGetFeatureValue(
+            CommonUsages.primaryButton,
+            out x
+        );
+
+        left_device.TryGetFeatureValue(
+            CommonUsages.secondaryButton,
+            out y
+        );
+
+        right_device.TryGetFeatureValue(
+            CommonUsages.primaryButton,
+            out a
+        );
+
+        right_device.TryGetFeatureValue(
+            CommonUsages.secondaryButton,
+            out b
+        );
 
         if (x && !prev_x)
         {
@@ -109,11 +129,64 @@ public class VRCarControl : MonoBehaviour
         prev_b = b;
     }
 
+    void CheckTurnSignalInput()
+    {
+        if (device_controller == null)
+        {
+            return;
+        }
+
+        Vector2 left_axis = GetLeftAxis();
+
+        /*
+         * 조이스틱이 중립에 가까워지면
+         * 다음 방향지시등 입력을 받을 수 있게 한다.
+         */
+        if (Mathf.Abs(left_axis.x) <= signal_reset_threshold)
+        {
+            signal_input_ready = true;
+        }
+
+        if (!signal_input_ready)
+        {
+            return;
+        }
+
+        if (left_axis.x <= -signal_input_threshold)
+        {
+            device_controller.ToggleLeftSignal();
+            signal_input_ready = false;
+        }
+        else if (left_axis.x >= signal_input_threshold)
+        {
+            device_controller.ToggleRightSignal();
+            signal_input_ready = false;
+        }
+    }
+
+    Vector2 GetLeftAxis()
+    {
+        Vector2 axis;
+
+        if (left_device.TryGetFeatureValue(
+            CommonUsages.primary2DAxis,
+            out axis
+        ))
+        {
+            return axis;
+        }
+
+        return Vector2.zero;
+    }
+
     float GetRightLever()
     {
         Vector2 axis;
 
-        if (right_device.TryGetFeatureValue(CommonUsages.primary2DAxis, out axis))
+        if (right_device.TryGetFeatureValue(
+            CommonUsages.primary2DAxis,
+            out axis
+        ))
         {
             return Mathf.Clamp01(axis.y);
         }
@@ -125,7 +198,10 @@ public class VRCarControl : MonoBehaviour
     {
         Vector2 axis;
 
-        if (left_device.TryGetFeatureValue(CommonUsages.primary2DAxis, out axis))
+        if (left_device.TryGetFeatureValue(
+            CommonUsages.primary2DAxis,
+            out axis
+        ))
         {
             return Mathf.Clamp01(axis.y);
         }

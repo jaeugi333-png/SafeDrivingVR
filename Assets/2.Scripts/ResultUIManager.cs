@@ -18,6 +18,18 @@ public class ResultUIManager : MonoBehaviour
     [Header("양손 운전 결과")]
     public TMP_Text twoHandDrivingResultText;
 
+    [Header("방향지시등 결과")]
+    public TMP_Text turnSignalResultText;
+
+    [Header("차선 이탈 결과")]
+    public TMP_Text laneDepartureResultText;
+
+    [Header("속도 준수 결과")]
+    public TMP_Text speedResultText;
+
+    [Header("출발 전 확인 결과")]
+    public TMP_Text startSafetyResultText;
+
     public void ShowResult()
     {
         safeDistanceResultText.gameObject.SetActive(true);
@@ -25,11 +37,19 @@ public class ResultUIManager : MonoBehaviour
         trafficViolationResultText.gameObject.SetActive(true);
         wiperUsageResultText.gameObject.SetActive(true);
         twoHandDrivingResultText.gameObject.SetActive(true);
+        turnSignalResultText.gameObject.SetActive(true);
+        laneDepartureResultText.gameObject.SetActive(true);
+        speedResultText.gameObject.SetActive(true);
+        startSafetyResultText.gameObject.SetActive(true);
         ShowSafeDistanceResult();
         ShowForwardAttentionResult();
         ShowTrafficViolationResult();
         ShowWiperUsageResult();
         ShowTwoHandDrivingResult();
+        ShowTurnSignalResult();
+        ShowLaneDepartureResult();
+        ShowSpeedResult();
+        ShowStartSafetyResult();
     }
 
     private void ShowSafeDistanceResult()
@@ -137,5 +157,98 @@ public class ResultUIManager : MonoBehaviour
             + "회\n" +
             "최종 판정: "
             + manager.GetFinalResult();
+    }
+
+    private void ShowTurnSignalResult()
+    {
+        TurnSignalRecordManager manager =
+            TurnSignalRecordManager.Instance;
+
+        if (manager == null || turnSignalResultText == null)
+            return;
+
+        turnSignalResultText.gameObject.SetActive(true);
+
+        turnSignalResultText.text =
+            "[방향지시등 평가]\n" +
+            "전체 회전: " + manager.total_turn_count + "회\n" +
+            "정상 사용: " + manager.correct_count + "회\n" +
+            "위반 횟수: " + manager.violation_count + "회\n" +
+            "최종 판정: " + manager.GetFinalResult();
+    }
+
+    private void ShowLaneDepartureResult()
+    {
+        LaneDepartureRecordManager manager =
+            LaneDepartureRecordManager.Instance;
+
+        if (manager == null ||
+            laneDepartureResultText == null)
+        {
+            return;
+        }
+
+        laneDepartureResultText.gameObject.SetActive(true);
+
+        laneDepartureResultText.text =
+            "[차선 이탈 평가]\n" +
+            "위반 횟수: " +
+            manager.violation_count +
+            "회\n" +
+            "최종 판정: " +
+            manager.GetFinalResult();
+    }
+
+    private void ShowSpeedResult()
+    {
+        SpeedRecordManager manager =
+            SpeedRecordManager.Instance;
+
+        if (manager == null ||
+            speedResultText == null)
+        {
+            return;
+        }
+
+        speedResultText.gameObject.SetActive(true);
+
+        speedResultText.text =
+            "[속도 준수 평가]\n" +
+            "최고 속도: " +
+            manager.max_speed.ToString("F1") +
+            " km/h\n" +
+            "과속 위반: " +
+            manager.violation_count +
+            "회\n" +
+            "최종 판정: " +
+            manager.GetFinalResult();
+    }
+
+    private void ShowStartSafetyResult()
+    {
+        StartSafetyRecordManager manager =
+            StartSafetyRecordManager.Instance;
+
+        if (manager == null ||
+            startSafetyResultText == null)
+        {
+            return;
+        }
+
+        startSafetyResultText.gameObject.SetActive(true);
+
+        startSafetyResultText.text =
+            "[출발 전 확인 평가]\n" +
+            "왼쪽 확인: " +
+            (manager.left_checked ? "완료" : "미확인") +
+            "\n" +
+            "오른쪽 확인: " +
+            (manager.right_checked ? "완료" : "미확인") +
+            "\n" +
+            "위반: " +
+            manager.violation_count +
+            "회\n" +
+            "최종 판정: " +
+            manager.GetFinalResult();
     }
 }
