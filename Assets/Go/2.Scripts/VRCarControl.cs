@@ -14,6 +14,12 @@ public class VRCarControl : MonoBehaviour
     public float signal_input_threshold = 0.7f;
     public float signal_reset_threshold = 0.3f;
 
+    [Header("기어 설정")]
+    public bool is_reverse = false;
+
+    [Header("기어 변경 조건")]
+    public float gear_change_speed = 0.1f;
+
     [Header("디버그 텍스트")]
     public TMP_Text debug_text;
 
@@ -23,7 +29,6 @@ public class VRCarControl : MonoBehaviour
     private bool prev_x;
     private bool prev_y;
     private bool prev_a;
-    private bool prev_b;
 
     private bool signal_input_ready = true;
 
@@ -115,18 +120,12 @@ public class VRCarControl : MonoBehaviour
 
         if (a && !prev_a)
         {
-            device_controller.ToggleHazard();
-        }
-
-        if (b && !prev_b)
-        {
-            device_controller.ToggleMenu();
+            car_controller.ChangeGear();
         }
 
         prev_x = x;
         prev_y = y;
         prev_a = a;
-        prev_b = b;
     }
 
     void CheckTurnSignalInput()

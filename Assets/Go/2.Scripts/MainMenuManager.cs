@@ -10,6 +10,10 @@ public class MainMenuManager : MonoBehaviour
     public GameObject safetyRulesUI;
     public GameObject settingsUI;
     public GameObject controllerUI;
+    public GameObject explainUI;
+    public GameObject resultUI;
+    public GameObject mainUI_1;
+    public GameObject mainUI_2;
 
     [Header("소리 설정")]
     public Slider volumeSlider;
@@ -19,8 +23,20 @@ public class MainMenuManager : MonoBehaviour
 
     void Start()
     {
-        // 처음에는 메인 UI만 표시
-        ShowMainUI();
+        if (DrivingResultData.Instance != null &&
+            DrivingResultData.Instance.hasResult)
+        {
+            // 주행 완료 후 MainScene으로 돌아온 경우
+            ShowResultUI();
+        }
+        else
+        {
+            // 앱을 처음 실행한 경우
+            ShowExplainUI();
+        }
+
+        //UI 1번 불러오기
+        MainUI1Road();
 
         // 저장된 음량 불러오기
         LoadAudioSettings();
@@ -32,40 +48,76 @@ public class MainMenuManager : MonoBehaviour
         SceneManager.LoadScene("SampleScene");
     }
 
-    // 메인 메뉴
-    public void ShowMainUI()
+    public void StartSimulation2()
     {
+        SceneManager.LoadScene("Load2");
+    }
+
+    // 설명 UI
+    public void ShowExplainUI()
+    {
+        explainUI.SetActive(true);
+        mainUI.SetActive(false);
+        safetyRulesUI.SetActive(false);
+        settingsUI.SetActive(false);
+        controllerUI.SetActive(false);
+        resultUI.SetActive(false);
+    }
+
+    // 결과 UI
+    public void ShowResultUI()
+    {
+        explainUI.SetActive(false);
+        mainUI.SetActive(false);
+        safetyRulesUI.SetActive(false);
+        settingsUI.SetActive(false);
+        controllerUI.SetActive(false);
+
+        resultUI.SetActive(true);
+    }
+
+    // 메인 메뉴
+    public void OpenMainUI()
+    {
+        explainUI.SetActive(false);
         mainUI.SetActive(true);
         safetyRulesUI.SetActive(false);
         settingsUI.SetActive(false);
         controllerUI.SetActive(false);
+        resultUI.SetActive(false);
     }
 
     // 안전 수칙
     public void OpenSafetyRules()
     {
+        explainUI.SetActive(false);
         mainUI.SetActive(false);
         settingsUI.SetActive(false);
         safetyRulesUI.SetActive(true);
         controllerUI.SetActive(false);
+        resultUI.SetActive(false);
     }
 
     // 설정
     public void OpenSettings()
     {
+        explainUI.SetActive(false);
         mainUI.SetActive(false);
         safetyRulesUI.SetActive(false);
         settingsUI.SetActive(true);
         controllerUI.SetActive(false);
+        resultUI.SetActive(false);
     }
 
     // 조작법
     public void OpenController()
     {
+        explainUI.SetActive(false);
         mainUI.SetActive(false);
         safetyRulesUI.SetActive(false);
         settingsUI.SetActive(false);
         controllerUI.SetActive(true);
+        resultUI.SetActive(false);
     }
 
     // 음량 설정
@@ -83,11 +135,23 @@ public class MainMenuManager : MonoBehaviour
         Application.Quit();
     }
 
+    public void MainUI1Road()
+    {
+        mainUI_1.SetActive(true);
+        mainUI_2.SetActive(false);
+    }
 
+    public void MainUI2Road()
+    {
+        mainUI_1.SetActive(false);
+        mainUI_2.SetActive(true);
+    }
+
+    // 저장된 음량 불러오기
     private void LoadAudioSettings()
     {
-        // 저장된 값이 없으면 기본 음량 100%
-        float savedVolume = PlayerPrefs.GetFloat(VolumeKey, 1f);
+        float savedVolume =
+            PlayerPrefs.GetFloat(VolumeKey, 1f);
 
         if (volumeSlider != null)
         {
@@ -96,6 +160,4 @@ public class MainMenuManager : MonoBehaviour
 
         AudioListener.volume = savedVolume;
     }
-
-
 }

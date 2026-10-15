@@ -42,16 +42,14 @@ public class TwoHandDrivingChecker : MonoBehaviour
         CheckTwoHandDriving();
     }
 
+    // 양손 운전 확인
     private void CheckTwoHandDriving()
     {
         is_both_hands_driving =
             steering_wheel.IsBothHandsGripping;
 
-        /*
-         * 차가 실제로 움직이는 동안만 평가한다.
-         * 시작 화면에서 컨트롤러를 잡지 않은 상태까지
-         * 위반으로 기록되는 것을 방지한다.
-         */
+        
+        // 차가 움직이는 동안만 평가
         is_measuring = IsCarDriving();
 
         if (!is_measuring)
@@ -73,12 +71,11 @@ public class TwoHandDrivingChecker : MonoBehaviour
         }
     }
 
+    // 주행 중인지 확인
     private bool IsCarDriving()
     {
         if (car_controller == null)
         {
-            // 차량 속도를 연결하지 않은 경우에는
-            // 항상 측정
             return true;
         }
 
@@ -94,6 +91,7 @@ public class TwoHandDrivingChecker : MonoBehaviour
             >= minimum_driving_speed;
     }
 
+    // 위반 기록
     private void RecordNonTwoHandDriving()
     {
         non_two_hand_duration += Time.deltaTime;
@@ -108,6 +106,7 @@ public class TwoHandDrivingChecker : MonoBehaviour
         }
     }
 
+    // 양손 운전 위반 초기화
     private void ResetViolationState()
     {
         non_two_hand_duration = 0f;

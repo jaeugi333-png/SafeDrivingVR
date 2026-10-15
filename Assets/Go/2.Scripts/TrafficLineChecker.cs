@@ -45,7 +45,6 @@ public class TrafficLineChecker : MonoBehaviour
             return;
         }
 
-        // 플레이어 차량 또는 플레이어 차량의 자식 Collider인지 확인
         if (other.transform.root != player_car.root)
         {
             return;

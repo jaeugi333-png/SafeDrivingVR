@@ -23,7 +23,7 @@ public class SafeDistanceChecker : MonoBehaviour
 
     void CheckDistance()
     {
-        if (Front_car == null || ScoreManager.instance == null)
+        if (Front_car == null)
         {
             return;
         }
@@ -55,18 +55,15 @@ public class SafeDistanceChecker : MonoBehaviour
     void ApplyPenalty()
     {
         if (close_time >= 3f)
-        {
-            ScoreManager.instance.MinusScore(15, "안전거리 미확보: 앞차와 3초 이상 가까운 거리를 유지했습니다.");
+        { 
             is_checked = true;
         }
         else if (close_time >= 2f)
         {
-            ScoreManager.instance.MinusScore(10, "안전거리 미확보: 앞차와 2초 이상 3초 미만 가까운 거리를 유지했습니다.");
             is_checked = true;
         }
         else if (close_time >= 1f)
         {
-            ScoreManager.instance.MinusScore(5, "안전거리 미확보: 앞차와 1초 이상 2초 미만 가까운 거리를 유지했습니다.");
             is_checked = true;
         }
     }

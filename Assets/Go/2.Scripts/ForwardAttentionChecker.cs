@@ -148,8 +148,6 @@ public class ForwardAttentionChecker : MonoBehaviour
                 }
 
                 violationRecorded = true;
-
-                Debug.Log("전방주시 위반 1회 기록");
             }
         }
     }

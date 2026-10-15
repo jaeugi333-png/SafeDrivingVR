@@ -13,8 +13,6 @@ public class CarDeviceControl : MonoBehaviour
     [Header("차량 장치 상태")]
     public bool light_on = false;
     public bool wiper_on = false;
-    public bool hazard_on = false;
-    public bool menu_on = false;
 
     [Header("방향지시등 상태")]
     public TurnSignalState turn_signal_state = TurnSignalState.Off;
@@ -40,8 +38,6 @@ public class CarDeviceControl : MonoBehaviour
     {
         light_on = false;
         wiper_on = false;
-        hazard_on = false;
-        menu_on = false;
 
         turn_signal_state = TurnSignalState.Off;
 
@@ -51,6 +47,7 @@ public class CarDeviceControl : MonoBehaviour
         blink_coroutine = StartCoroutine(BlinkSignal());
     }
 
+    // 전조등 켜기 / 끄기
     public void ToggleLight()
     {
         light_on = !light_on;
@@ -72,6 +69,7 @@ public class CarDeviceControl : MonoBehaviour
         }
     }
 
+    // 와이퍼 켜기 / 끄기
     public void ToggleWiper()
     {
         wiper_on = !wiper_on;
@@ -79,29 +77,9 @@ public class CarDeviceControl : MonoBehaviour
         Debug.Log("와이퍼: " + wiper_on);
     }
 
-    public void ToggleHazard()
-    {
-        hazard_on = !hazard_on;
-
-        if (hazard_on)
-        {
-            turn_signal_state = TurnSignalState.Off;
-        }
-
-        Debug.Log("비상등: " + hazard_on);
-    }
-
-    public void ToggleMenu()
-    {
-        menu_on = !menu_on;
-
-        Debug.Log("메뉴: " + menu_on);
-    }
-
+    // 왼쪽 방향지시등 켜기 / 끄기
     public void ToggleLeftSignal()
     {
-        hazard_on = false;
-
         if (turn_signal_state == TurnSignalState.Left)
         {
             turn_signal_state = TurnSignalState.Off;
@@ -116,10 +94,9 @@ public class CarDeviceControl : MonoBehaviour
         Debug.Log("방향지시등: " + turn_signal_state);
     }
 
+    // 오른쪽 방향지시등 켜기 / 끄기
     public void ToggleRightSignal()
     {
-        hazard_on = false;
-
         if (turn_signal_state == TurnSignalState.Right)
         {
             turn_signal_state = TurnSignalState.Off;
@@ -134,16 +111,18 @@ public class CarDeviceControl : MonoBehaviour
         Debug.Log("방향지시등: " + turn_signal_state);
     }
 
+    // 방향지시등 끄기
     public void TurnOffSignal()
     {
         turn_signal_state = TurnSignalState.Off;
-        hazard_on = false;
 
         ApplySignalLights(false);
+        UpdateBlinkerSound();
 
         Debug.Log("방향지시등 꺼짐");
     }
 
+    // 방향지시등 깜빡임
     IEnumerator BlinkSignal()
     {
         while (true)
@@ -156,26 +135,19 @@ public class CarDeviceControl : MonoBehaviour
         }
     }
 
+    // 실제 방향지시등 Light 제어
     void ApplySignalLights(bool blink_state)
     {
         bool left_on = false;
         bool right_on = false;
 
-        if (hazard_on)
+        if (turn_signal_state == TurnSignalState.Left)
         {
             left_on = blink_state;
-            right_on = blink_state;
         }
-        else
+        else if (turn_signal_state == TurnSignalState.Right)
         {
-            if (turn_signal_state == TurnSignalState.Left)
-            {
-                left_on = blink_state;
-            }
-            else if (turn_signal_state == TurnSignalState.Right)
-            {
-                right_on = blink_state;
-            }
+            right_on = blink_state;
         }
 
         if (left_signal_light != null)
@@ -189,22 +161,22 @@ public class CarDeviceControl : MonoBehaviour
         }
     }
 
+    // 왼쪽 방향지시등 상태 확인
     public bool IsLeftSignalOn()
     {
-        return !hazard_on &&
-               turn_signal_state == TurnSignalState.Left;
+        return turn_signal_state == TurnSignalState.Left;
     }
 
+    // 오른쪽 방향지시등 상태 확인
     public bool IsRightSignalOn()
     {
-        return !hazard_on &&
-               turn_signal_state == TurnSignalState.Right;
+        return turn_signal_state == TurnSignalState.Right;
     }
 
+    // 방향지시등 사운드 제어
     void UpdateBlinkerSound()
     {
         bool signal_is_active =
-            hazard_on ||
             turn_signal_state != TurnSignalState.Off;
 
         if (signal_audio_source == null)
@@ -226,5 +198,10 @@ public class CarDeviceControl : MonoBehaviour
                 signal_audio_source.Stop();
             }
         }
+    }
+
+    public bool IsSignalBlinkOn()
+    {
+        return blink_on;
     }
 }
