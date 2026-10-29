@@ -155,11 +155,21 @@ public class SafeDistanceEvent : MonoBehaviour
 
     public void StopSafeDistanceEvent()
     {
+        if (!eventStarted)
+        {
+            return;
+        }
+
         eventStarted = false;
 
         if (frontCarMover != null)
         {
             frontCarMover.StopDriving();
+        }
+
+        if (frontCar != null)
+        {
+            frontCar.SetActive(false);
         }
     }
 }
