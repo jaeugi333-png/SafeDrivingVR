@@ -1,3 +1,4 @@
+
 using UnityEngine;
 
 public class ForwardAttentionChecker : MonoBehaviour
@@ -16,6 +17,9 @@ public class ForwardAttentionChecker : MonoBehaviour
     [Header("위반 판정")]
     public float violationHoldTime = 2f;
 
+    [Header("추가 감점 간격")]
+    public float additionalPenaltyInterval = 1f;
+
     [Header("측정 설정")]
     public bool measurementEnabled = true;
 
@@ -26,13 +30,12 @@ public class ForwardAttentionChecker : MonoBehaviour
     public bool isLookingForward;
     public bool isLookAwayViolation;
 
-    private bool violationRecorded;
+    private bool firstViolationRecorded;
+    private float nextPenaltyTime;
 
     private void Start()
     {
-        currentLookAwayDuration = 0f;
-        violationRecorded = false;
-        isLookAwayViolation = false;
+        ResetLookAwayState();
     }
 
     private void Update()
@@ -57,21 +60,23 @@ public class ForwardAttentionChecker : MonoBehaviour
 
         if (manager == null)
         {
-            Debug.LogWarning(
-                "ForwardAttentionRecordManager를 찾을 수 없습니다."
-            );
             return;
         }
 
-        // 정면주시 여부와 관계없이 측정했다는 사실을 기록
+        // 전체 측정 시간 기록
         manager.RecordMeasurement(Time.deltaTime);
 
         Vector3 carForward = playerCar.forward;
         Vector3 cameraForward = headCamera.forward;
 
-        CalculateHorizontalAngle(carForward, cameraForward);
+        CalculateHorizontalAngle(
+            carForward,
+            cameraForward
+        );
+
         CalculateVerticalAngle(cameraForward);
 
+        // 전방주시 여부 판정
         isLookingForward =
             currentHorizontalAngle <= allowedHorizontalAngle &&
             currentVerticalAngle <= allowedVerticalAngle;
@@ -82,7 +87,7 @@ public class ForwardAttentionChecker : MonoBehaviour
         }
         else
         {
-            RecordLookAway();
+            RecordLookAway(manager);
         }
     }
 
@@ -107,7 +112,9 @@ public class ForwardAttentionChecker : MonoBehaviour
         );
     }
 
-    private void CalculateVerticalAngle(Vector3 cameraForward)
+    private void CalculateVerticalAngle(
+        Vector3 cameraForward
+    )
     {
         Vector3 flatCameraForward = Vector3.ProjectOnPlane(
             cameraForward,
@@ -120,34 +127,50 @@ public class ForwardAttentionChecker : MonoBehaviour
         );
     }
 
-    private void RecordLookAway()
+    private void RecordLookAway(
+        ForwardAttentionRecordManager manager
+    )
     {
+        // 전방을 보지 않은 시간 누적
         currentLookAwayDuration += Time.deltaTime;
 
-        ForwardAttentionRecordManager manager =
-            ForwardAttentionRecordManager.Instance;
+        // 누적 이탈 시간 기록
+        manager.AddLookAwayTime(Time.deltaTime);
 
-        if (manager != null)
-        {
-            manager.AddLookAwayTime(Time.deltaTime);
+        // 최장 연속 이탈 시간 기록
+        manager.UpdateLongestLookAwayTime(
+            currentLookAwayDuration
+        );
 
-            manager.UpdateLongestLookAwayTime(
-                currentLookAwayDuration
-            );
-        }
+        // 최초 감점 기준 시간
+        float holdTime =
+            Mathf.Max(0f, violationHoldTime);
 
-        if (currentLookAwayDuration >= violationHoldTime)
+        // 추가 감점 간격
+        float interval =
+            Mathf.Max(0.01f, additionalPenaltyInterval);
+
+        // 2초 이상 전방을 보지 않으면 최초 감점
+        if (!firstViolationRecorded &&
+            currentLookAwayDuration >= holdTime)
         {
             isLookAwayViolation = true;
 
-            if (!violationRecorded)
-            {
-                if (manager != null)
-                {
-                    manager.AddViolation();
-                }
+            manager.AddViolation();
 
-                violationRecorded = true;
+            firstViolationRecorded = true;
+
+            nextPenaltyTime = holdTime + interval;
+        }
+
+        // 이후 1초마다 추가 감점
+        if (firstViolationRecorded)
+        {
+            while (currentLookAwayDuration >= nextPenaltyTime)
+            {
+                manager.AddViolation();
+
+                nextPenaltyTime += interval;
             }
         }
     }
@@ -155,7 +178,11 @@ public class ForwardAttentionChecker : MonoBehaviour
     private void ResetLookAwayState()
     {
         currentLookAwayDuration = 0f;
-        violationRecorded = false;
+
+        firstViolationRecorded = false;
+
+        nextPenaltyTime = 0f;
+
         isLookAwayViolation = false;
     }
 
@@ -167,8 +194,7 @@ public class ForwardAttentionChecker : MonoBehaviour
     public void StopMeasurement()
     {
         measurementEnabled = false;
-        currentLookAwayDuration = 0f;
-        violationRecorded = false;
-        isLookAwayViolation = false;
+
+        ResetLookAwayState();
     }
 }

@@ -1,3 +1,4 @@
+
 using UnityEngine;
 
 public class SpeedChecker : MonoBehaviour
@@ -8,6 +9,7 @@ public class SpeedChecker : MonoBehaviour
     [Header("과속 판정")]
     public float speed_tolerance = 3f;
     public float violation_hold_time = 3f;
+    public float additional_penalty_interval = 1f;
 
     [Header("현재 상태")]
     public float current_speed;
@@ -15,12 +17,12 @@ public class SpeedChecker : MonoBehaviour
     public float overspeed_duration;
     public bool is_overspeed;
 
-    private bool violation_recorded;
+    private bool first_violation_recorded;
+    private float next_penalty_time;
 
     private void Start()
     {
-        overspeed_duration = 0f;
-        violation_recorded = false;
+        ResetOverspeedState();
     }
 
     private void Update()
@@ -64,20 +66,31 @@ public class SpeedChecker : MonoBehaviour
         {
             overspeed_duration += Time.deltaTime;
 
-            if (overspeed_duration >= violation_hold_time &&
-                !violation_recorded)
+            // 과속 3초 지속 시 최초 감점
+            if (!first_violation_recorded &&
+                overspeed_duration >= violation_hold_time)
             {
-                SpeedRecordManager.Instance
-                    .AddViolation();
+                AddSpeedPenalty();
 
-                violation_recorded = true;
+                first_violation_recorded = true;
 
-                Debug.Log(
-                    "과속 위반 기록 / 현재속도: " +
-                    current_speed.ToString("F1") +
-                    " / 제한속도: " +
-                    current_speed_limit.ToString("F0")
-                );
+                next_penalty_time =
+                    violation_hold_time +
+                    Mathf.Max(0.01f, additional_penalty_interval);
+            }
+
+            // 이후 1초마다 추가 감점
+            if (first_violation_recorded)
+            {
+                float interval =
+                    Mathf.Max(0.01f, additional_penalty_interval);
+
+                while (overspeed_duration >= next_penalty_time)
+                {
+                    AddSpeedPenalty();
+
+                    next_penalty_time += interval;
+                }
             }
         }
         else
@@ -86,9 +99,16 @@ public class SpeedChecker : MonoBehaviour
         }
     }
 
+    private void AddSpeedPenalty()
+    {
+        SpeedRecordManager.Instance.AddViolation();
+    }
+
     private void ResetOverspeedState()
     {
         overspeed_duration = 0f;
-        violation_recorded = false;
+        first_violation_recorded = false;
+        next_penalty_time = 0f;
+        is_overspeed = false;
     }
 }
