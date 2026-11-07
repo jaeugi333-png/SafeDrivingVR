@@ -158,6 +158,9 @@ public class ForwardAttentionChecker : MonoBehaviour
 
             manager.AddViolation();
 
+            // 전방주시 위반 알림 요청
+            ShowForwardAttentionNotification();
+
             firstViolationRecorded = true;
 
             nextPenaltyTime = holdTime + interval;
@@ -170,8 +173,22 @@ public class ForwardAttentionChecker : MonoBehaviour
             {
                 manager.AddViolation();
 
+                // 추가 감점 시에도 알림 요청
+                ShowForwardAttentionNotification();
+
                 nextPenaltyTime += interval;
             }
+        }
+    }
+
+    // 전방주시 위반 알림
+    private void ShowForwardAttentionNotification()
+    {
+        if (ViolationNotificationManager.Instance != null)
+        {
+            ViolationNotificationManager.Instance.ShowViolation(
+                ViolationNotificationManager.ViolationType.ForwardAttention
+            );
         }
     }
 

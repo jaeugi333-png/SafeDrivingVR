@@ -102,6 +102,14 @@ public class SpeedChecker : MonoBehaviour
     private void AddSpeedPenalty()
     {
         SpeedRecordManager.Instance.AddViolation();
+
+        // 과속 위반 알림 요청
+        if (ViolationNotificationManager.Instance != null)
+        {
+            ViolationNotificationManager.Instance.ShowViolation(
+                ViolationNotificationManager.ViolationType.Speed
+            );
+        }
     }
 
     private void ResetOverspeedState()

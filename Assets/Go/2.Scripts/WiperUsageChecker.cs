@@ -104,7 +104,11 @@ public class WiperUsageChecker : MonoBehaviour
         if (!first_violation_recorded &&
             current_wiper_off_duration >= hold_time)
         {
+            // 기존 위반 기록 및 감점
             manager.AddViolation();
+
+            // 와이퍼 위반 알림 요청
+            ShowWiperNotification();
 
             first_violation_recorded = true;
 
@@ -116,10 +120,25 @@ public class WiperUsageChecker : MonoBehaviour
         {
             while (current_wiper_off_duration >= next_penalty_time)
             {
+                // 기존 위반 기록 및 감점
                 manager.AddViolation();
+
+                // 와이퍼 위반 알림 요청
+                ShowWiperNotification();
 
                 next_penalty_time += interval;
             }
+        }
+    }
+
+    // 와이퍼 미작동 위반 알림
+    private void ShowWiperNotification()
+    {
+        if (ViolationNotificationManager.Instance != null)
+        {
+            ViolationNotificationManager.Instance.ShowViolation(
+                ViolationNotificationManager.ViolationType.Wiper
+            );
         }
     }
 

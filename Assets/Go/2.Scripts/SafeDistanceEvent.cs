@@ -1,3 +1,4 @@
+
 using UnityEngine;
 
 public class SafeDistanceEvent : MonoBehaviour
@@ -66,7 +67,6 @@ public class SafeDistanceEvent : MonoBehaviour
 
         if (playerCar == null)
         {
-            Debug.LogWarning("Player Car가 연결되지 않았습니다.");
             return;
         }
 
@@ -124,21 +124,31 @@ public class SafeDistanceEvent : MonoBehaviour
             return;
         }
 
+        // 현재 안전거리 기록
         manager.RecordDistance(currentDistance);
 
+        // 위험 구간: 5m 미만
         if (currentDistance < dangerDistance)
         {
             manager.AddDangerTime(Time.deltaTime);
 
             dangerHoldTimer += Time.deltaTime;
 
+            // 위험 구간이 2초 이상 지속되면 위반
             if (dangerHoldTimer >= violationHoldTime &&
                 !violationRecorded)
             {
+                // 기존 안전거리 위반 기록
                 manager.AddViolation();
+
+                // 안전거리 위반 알림 요청
+                ShowSafeDistanceNotification();
+
                 violationRecorded = true;
             }
         }
+
+        // 주의 구간: 5m 이상 10m 미만
         else if (currentDistance < cautionDistance)
         {
             manager.AddCautionTime(Time.deltaTime);
@@ -146,10 +156,23 @@ public class SafeDistanceEvent : MonoBehaviour
             dangerHoldTimer = 0f;
             violationRecorded = false;
         }
+
+        // 안전 구간: 10m 이상
         else
         {
             dangerHoldTimer = 0f;
             violationRecorded = false;
+        }
+    }
+
+    // 안전거리 위반 알림
+    private void ShowSafeDistanceNotification()
+    {
+        if (ViolationNotificationManager.Instance != null)
+        {
+            ViolationNotificationManager.Instance.ShowViolation(
+                ViolationNotificationManager.ViolationType.SafeDistance
+            );
         }
     }
 

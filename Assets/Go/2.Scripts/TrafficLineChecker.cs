@@ -1,3 +1,4 @@
+
 using UnityEngine;
 
 public class TrafficLineChecker : MonoBehaviour
@@ -20,6 +21,7 @@ public class TrafficLineChecker : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        // 이미 통과했다면 중복 판정 방지
         if (has_passed)
         {
             return;
@@ -27,24 +29,15 @@ public class TrafficLineChecker : MonoBehaviour
 
         if (player_car == null)
         {
-            Debug.LogWarning(
-                gameObject.name +
-                ": Player Car가 연결되지 않았습니다."
-            );
-
             return;
         }
 
         if (traffic_light == null)
         {
-            Debug.LogWarning(
-                gameObject.name +
-                ": Traffic Light가 연결되지 않았습니다."
-            );
-
             return;
         }
 
+        // 플레이어 차량인지 확인
         if (other.transform.root != player_car.root)
         {
             return;
@@ -57,7 +50,7 @@ public class TrafficLineChecker : MonoBehaviour
     {
         has_passed = true;
 
-        // 현재 신호등 상태 저장
+        // 통과 당시 신호등 상태 저장
         passed_signal = traffic_light.current_signal;
 
         TrafficViolationRecordManager manager =
@@ -65,19 +58,28 @@ public class TrafficLineChecker : MonoBehaviour
 
         if (manager == null)
         {
-            Debug.LogWarning(
-                "TrafficViolationRecordManager를 찾을 수 없습니다."
-            );
-
             return;
         }
 
+        // 기존 신호 통과 기록 및 위반 판정
         manager.RecordPass(passed_signal);
 
-        Debug.Log(
-            gameObject.name +
-            " 통과 당시 신호: " +
-            passed_signal
-        );
+        // 빨간불 또는 노란불 통과 시 알림
+        if (passed_signal == TrafficLightController.SignalState.Red ||
+            passed_signal == TrafficLightController.SignalState.Yellow)
+        {
+            ShowTrafficNotification();
+        }
+    }
+
+    // 신호 위반 알림
+    private void ShowTrafficNotification()
+    {
+        if (ViolationNotificationManager.Instance != null)
+        {
+            ViolationNotificationManager.Instance.ShowViolation(
+                ViolationNotificationManager.ViolationType.Traffic
+            );
+        }
     }
 }

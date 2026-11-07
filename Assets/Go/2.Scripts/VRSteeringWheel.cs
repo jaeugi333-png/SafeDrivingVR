@@ -1,3 +1,4 @@
+
 using UnityEngine;
 using UnityEngine.XR;
 
@@ -14,36 +15,74 @@ public class VRSteeringWheel : MonoBehaviour
     public float steer_input;
     public float wheel_angle;
 
+    [Header("컨트롤러 입력 상태")]
+    public bool left_grip;
+    public bool right_grip;
+
+    [Header("컨트롤러 연결 상태")]
+    public bool left_device_valid;
+    public bool right_device_valid;
+
+    [Header("Grip 입력 읽기 성공 여부")]
+    public bool left_grip_read_success;
+    public bool right_grip_read_success;
+
     private InputDevice left_device;
     private InputDevice right_device;
 
     private Vector3 left_pos;
     private Vector3 right_pos;
 
-    private bool left_grip;
-    private bool right_grip;
-
     public bool LeftGrip => left_grip;
     public bool RightGrip => right_grip;
-    public bool IsBothHandsGripping => left_grip && right_grip;
 
-    void Start()
+    public bool IsBothHandsGripping =>
+        left_grip && right_grip;
+
+    private void Start()
     {
-        left_device = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
-        right_device = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+        ConnectDevices();
     }
 
-    void Update()
+    private void Update()
     {
-        if (!left_device.isValid)
-            left_device = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
+        // 연결이 끊어졌다면 다시 연결
+        if (!left_device.isValid ||
+            !right_device.isValid)
+        {
+            ConnectDevices();
+        }
 
-        if (!right_device.isValid)
-            right_device = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+        left_device_valid = left_device.isValid;
+        right_device_valid = right_device.isValid;
 
-        left_device.TryGetFeatureValue(CommonUsages.gripButton, out left_grip);
-        right_device.TryGetFeatureValue(CommonUsages.gripButton, out right_grip);
+        // Grip 입력 읽기
+        left_grip_read_success =
+            left_device.isValid &&
+            left_device.TryGetFeatureValue(
+                CommonUsages.gripButton,
+                out left_grip
+            );
 
+        right_grip_read_success =
+            right_device.isValid &&
+            right_device.TryGetFeatureValue(
+                CommonUsages.gripButton,
+                out right_grip
+            );
+
+        // 입력 읽기에 실패했다면 false
+        if (!left_grip_read_success)
+        {
+            left_grip = false;
+        }
+
+        if (!right_grip_read_success)
+        {
+            right_grip = false;
+        }
+
+        // 양손으로 Grip 버튼을 누른 경우
         if (left_grip && right_grip)
         {
             UpdateWheelAngle();
@@ -56,26 +95,69 @@ public class VRSteeringWheel : MonoBehaviour
         steer_input = wheel_angle / max_wheel_angle;
 
         if (car_controller != null)
+        {
             car_controller.steer_input = steer_input;
+        }
 
-        transform.localRotation = Quaternion.Euler(0f, 0f, -wheel_angle);
+        transform.localRotation =
+            Quaternion.Euler(0f, 0f, -wheel_angle);
     }
 
-    void UpdateWheelAngle()
+    // 좌우 컨트롤러 연결
+    private void ConnectDevices()
     {
-        bool left_ok = left_device.TryGetFeatureValue(CommonUsages.devicePosition, out left_pos);
-        bool right_ok = right_device.TryGetFeatureValue(CommonUsages.devicePosition, out right_pos);
+        if (!left_device.isValid)
+        {
+            left_device =
+                InputDevices.GetDeviceAtXRNode(
+                    XRNode.LeftHand
+                );
+        }
+
+        if (!right_device.isValid)
+        {
+            right_device =
+                InputDevices.GetDeviceAtXRNode(
+                    XRNode.RightHand
+                );
+        }
+    }
+
+    // 양손 위치를 이용해 핸들 각도 계산
+    private void UpdateWheelAngle()
+    {
+        bool left_ok =
+            left_device.TryGetFeatureValue(
+                CommonUsages.devicePosition,
+                out left_pos
+            );
+
+        bool right_ok =
+            right_device.TryGetFeatureValue(
+                CommonUsages.devicePosition,
+                out right_pos
+            );
 
         if (!left_ok || !right_ok)
+        {
             return;
+        }
 
         Vector3 dir = right_pos - left_pos;
-        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
 
-        wheel_angle = -Mathf.Clamp(angle, -max_wheel_angle, max_wheel_angle);
+        float angle =
+            Mathf.Atan2(dir.y, dir.x) *
+            Mathf.Rad2Deg;
+
+        wheel_angle = -Mathf.Clamp(
+            angle,
+            -max_wheel_angle,
+            max_wheel_angle
+        );
     }
 
-    void ReturnWheelToCenter()
+    // Grip을 놓았을 때 핸들 원위치
+    private void ReturnWheelToCenter()
     {
         wheel_angle = Mathf.MoveTowards(
             wheel_angle,

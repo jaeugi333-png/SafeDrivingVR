@@ -1,3 +1,4 @@
+
 using UnityEngine;
 
 public class TurnSignalCheckZone : MonoBehaviour
@@ -27,14 +28,23 @@ public class TurnSignalCheckZone : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        // 이미 검사했다면 중복 판정 방지
         if (has_checked)
+        {
             return;
+        }
 
+        // 필요한 오브젝트가 연결되어 있는지 확인
         if (player_car == null || device_controller == null)
+        {
             return;
+        }
 
+        // 플레이어 차량인지 확인
         if (other.transform.root != player_car.root)
+        {
             return;
+        }
 
         CheckSignal();
     }
@@ -45,29 +55,54 @@ public class TurnSignalCheckZone : MonoBehaviour
 
         bool is_correct = false;
 
+        // 좌회전 구간
         if (required_turn == RequiredTurn.Left)
         {
             is_correct = device_controller.IsLeftSignalOn();
         }
+
+        // 우회전 구간
         else if (required_turn == RequiredTurn.Right)
         {
             is_correct = device_controller.IsRightSignalOn();
         }
 
-        if (TurnSignalRecordManager.Instance == null)
-            return;
+        TurnSignalRecordManager manager =
+            TurnSignalRecordManager.Instance;
 
+        if (manager == null)
+        {
+            return;
+        }
+
+        // 방향지시등을 올바르게 사용한 경우
         if (is_correct)
         {
-            TurnSignalRecordManager.Instance.RecordCorrect();
-            Debug.Log("방향지시등 정상 사용");
-        }
-        else
-        {
-            TurnSignalRecordManager.Instance.RecordViolation();
-            Debug.Log("방향지시등 미사용 또는 잘못된 방향");
+            manager.RecordCorrect();
         }
 
+        // 방향지시등을 사용하지 않았거나 잘못 사용한 경우
+        else
+        {
+            // 기존 방향지시등 위반 기록
+            manager.RecordViolation();
+
+            // 방향지시등 위반 알림 요청
+            ShowTurnSignalNotification();
+        }
+
+        // 방향지시등 자동 해제
         device_controller.TurnOffSignal();
+    }
+
+    // 방향지시등 위반 알림
+    private void ShowTurnSignalNotification()
+    {
+        if (ViolationNotificationManager.Instance != null)
+        {
+            ViolationNotificationManager.Instance.ShowViolation(
+                ViolationNotificationManager.ViolationType.TurnSignal
+            );
+        }
     }
 }

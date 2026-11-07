@@ -1,3 +1,4 @@
+
 using UnityEngine;
 
 public class LaneViolationTrigger : MonoBehaviour
@@ -7,6 +8,7 @@ public class LaneViolationTrigger : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        // LaneCheck 태그가 아니라면 무시
         if (!other.CompareTag("LaneCheck"))
         {
             return;
@@ -25,23 +27,30 @@ public class LaneViolationTrigger : MonoBehaviour
 
         if (manager == null)
         {
-            Debug.LogWarning(
-                "LaneDepartureRecordManager가 없습니다."
-            );
-
             return;
         }
 
+        // 기존 차선 이탈 위반 기록
         manager.AddViolation();
 
-        Debug.Log(
-            gameObject.name +
-            "에 차량 측정 콜라이더가 닿았습니다."
-        );
+        // 차선 이탈 위반 알림 요청
+        ShowLaneDepartureNotification();
+    }
+
+    // 차선 이탈 위반 알림
+    private void ShowLaneDepartureNotification()
+    {
+        if (ViolationNotificationManager.Instance != null)
+        {
+            ViolationNotificationManager.Instance.ShowViolation(
+                ViolationNotificationManager.ViolationType.LaneDeparture
+            );
+        }
     }
 
     private void OnTriggerExit(Collider other)
     {
+        // LaneCheck 태그가 아니라면 무시
         if (!other.CompareTag("LaneCheck"))
         {
             return;

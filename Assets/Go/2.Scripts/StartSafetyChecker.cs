@@ -1,3 +1,4 @@
+
 using UnityEngine;
 
 public class StartSafetyChecker : MonoBehaviour
@@ -30,11 +31,13 @@ public class StartSafetyChecker : MonoBehaviour
 
     private void Update()
     {
+        // 이미 출발 전 확인 평가가 끝났다면 종료
         if (evaluation_finished)
         {
             return;
         }
 
+        // 필요한 오브젝트가 연결되어 있는지 확인
         if (player_car == null ||
             head_camera == null ||
             car_controller == null)
@@ -46,6 +49,7 @@ public class StartSafetyChecker : MonoBehaviour
         CheckStart();
     }
 
+    // 출발 전 좌우 확인 여부 검사
     private void CheckHeadDirection()
     {
         Vector3 car_forward =
@@ -67,10 +71,10 @@ public class StartSafetyChecker : MonoBehaviour
                 Vector3.up
             );
 
-        // Unity 기준:
-        // 음수 → 왼쪽
-        // 양수 → 오른쪽
+        // 음수 == 왼쪽
+        // 양수 == 오른쪽
 
+        // 왼쪽 45도 이상 확인
         if (current_signed_angle <= -check_angle)
         {
             left_checked = true;
@@ -81,6 +85,7 @@ public class StartSafetyChecker : MonoBehaviour
             }
         }
 
+        // 오른쪽 45도 이상 확인
         if (current_signed_angle >= check_angle)
         {
             right_checked = true;
@@ -92,26 +97,40 @@ public class StartSafetyChecker : MonoBehaviour
         }
     }
 
+    // 출발 여부 확인
     private void CheckStart()
     {
+        // 출발 속도에 도달하지 않았다면 평가 계속
         if (car_controller.current_speed < start_speed)
         {
             return;
         }
 
+        // 출발 전 확인 평가 종료
         evaluation_finished = true;
 
+        // 기존 평가 결과 기록
         if (StartSafetyRecordManager.Instance != null)
         {
             StartSafetyRecordManager.Instance
                 .FinishMeasurement();
         }
 
-        Debug.Log(
-            "출발 전 확인 평가 완료 / Left: " +
-            left_checked +
-            " / Right: " +
-            right_checked
-        );
+        // 좌우 중 하나라도 확인하지 않았다면 위반 알림
+        if (!left_checked || !right_checked)
+        {
+            ShowStartSafetyNotification();
+        }
+    }
+
+    // 출발 전 확인 위반 알림
+    private void ShowStartSafetyNotification()
+    {
+        if (ViolationNotificationManager.Instance != null)
+        {
+            ViolationNotificationManager.Instance.ShowViolation(
+                ViolationNotificationManager.ViolationType.StartSafety
+            );
+        }
     }
 }
